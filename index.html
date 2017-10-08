@@ -1,0 +1,272 @@
+<html>
+<head>
+
+  <style type="text/css">
+        .widget{
+                flex: 1 1 auto;
+                height: 20vh;
+                border: 1px solid black;
+                border-radius: 1rem 1rem 0 0;
+                outline-radius: ;
+                text-align: center;
+        transform: translateY(18vh);
+        transition: transform 1s;
+        }
+  </style>
+  <script type="text/javascript" src="instascan.min.js">
+</script>
+  <link rel="stylesheet" href=
+  "https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css"
+  type="text/css" />
+  <link rel="stylesheet" href="css/weather-icons.css" type="text/css" />
+
+  <title></title>
+</head>
+
+<body style=
+"overflow-y: hidden; background: url(pattern.png); background-size: 100% 100%;">
+  <div id="fadeFlash" style=
+  "pointer-events: none; background-color: snow; height:100vh; width:100vw; position: absolute; z-index: 1; top:0; opacity:0">
+  </div>
+
+  <div class="container" style="height: 80vh; display:flex;">
+    <div class="center" style=
+    "font-size: 10em; align-self: center; flex: 1 1 auto; -webkit-text-stroke: 3px black; color: white">
+    <div id="title"></div>
+
+      <div id="time"></div>
+
+      <div id="date" style="font-size:6rem"></div>
+
+      <div id="videoPlayer"></div>
+    </div>
+  </div>
+
+  <div style="height: 20vh; display: flex">
+    <div class="widget brown lighten-1" id="garage">
+      <div id="garageTitle" style="height:2vh; width: 100%">
+        Garages -
+      </div>
+
+      <div id="garageData">
+        0
+      </div>
+    </div>
+
+    <div class="widget brown lighten-1" id="weather">
+      <div id="weatherTitle" style="height:2vh; width: 100%">
+        Weather -
+      </div>
+
+      <div id="weatherData" class="center valign"></div>
+    </div>
+
+    <div class="widget brown lighten-1" id="pubsub">
+      <div id="pubsubTitle" style="height:2vh; width: 100%">
+        Pub Subs -
+      </div>
+
+      <div id="pubsubData" class="center valign"></div>
+    </div>
+
+    <div class="widget brown lighten-1" id="pubsub">
+      <div id="optionsTitle" style="height:2vh; width: 100%">
+        Options
+      </div>
+
+      <div id="optionsData" class="center valign">
+        <a class="waves-effect waves-light btn brown lighten-2" onclick="demo()">Demo</a>
+        <a class="waves-effect waves-light btn brown lighten-2" onclick=
+        "memeDemo()">S Demo</a>
+      </div>econd
+    </div><script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity=
+    "sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" type=
+    "text/javascript">
+</script> <!-- Compiled and minified JavaScript -->
+     <script src=
+    "https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"
+    type="text/javascript">
+</script> <script type="text/javascript">
+
+        let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+      scanner.addListener('scan', function (content) {
+        console.log(content);
+        if(content === options.passkey){
+                cancelAlarm();
+        }
+      });
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+          scanner.start(cameras[0]);
+        } else {
+          console.error('No cameras found.');
+        }
+      }).catch(function (e) {
+        console.error(e);
+      });
+
+        //Alarm
+        options = {"hour": 8, "minutes": 30, passkey: "{{passkey}}"};
+        triggered =  false; 
+        flip = true;
+        function getTime (){
+                var d = new Date();
+                var hours = d.getHours();
+                var minutes = d.getMinutes();
+                if(hours == options.hour && minutes == options.minutes && !triggered){
+                        triggered = true;
+                        triggerAlarm();
+                        
+                }
+                var amPM = (hours < 12 ? "AM": "PM");
+                if(hours > 12)
+                        hours -= 12;
+                if(hours === 0 )
+                        hours = 12;
+                hours = fixTime(hours);
+                minutes = fixTime(minutes);
+                $("#time").text(flip ? (hours + ":" + minutes + " " + amPM) :(hours + " " + minutes + " " + amPM));
+                flip = !flip;
+                //$("#date").html((d.getDay() + 1) + "/" + (d.getMonth())
+         }
+
+         function fixTime(time)
+         {
+                if(time < 10)
+                        return '0' + time;
+                return time;
+         }
+
+        //get garage data
+         $.get( "api/garage", function( data ) {
+          var output = "";
+          var percTotal = 0;
+          for(garage in data){
+                output += "Garage " + data[garage].garage + " " + data[garage].perc + "% <br>";
+                percTotal += data[garage].perc;
+          };
+          percTotalPercent = (percTotal / (data.length*100) )*100;
+          if(percTotalPercent > 90){
+                $("garageTitle").append("Very Busy");
+          }
+          else if(percTotalPercent > 70){
+                $("#garageTitle").append("Busy");
+          }
+          else if(percTotalPercent > 50){
+                $("#garageTitle").append("Kinda Busy");
+          }
+          else
+                $("#garageTitle").append("Not Busy");
+          $('#garageData').html(output);
+        });
+
+         $('.timepicker').pickatime({
+    default: 'now', // Set default time: 'now', '1:30AM', '16:30'
+    fromnow: 0,       // set default time to * milliseconds from now (using with default = 'now')
+    twelvehour: false, // Use AM/PM or 24-hour format
+    donetext: 'OK', // text for done-button
+    cleartext: 'Clear', // text for clear-button
+    canceltext: 'Cancel', // Text for cancel-button
+    autoclose: false, // automatic close timepicker
+    ampmclickable: true, // make AM PM clickable
+    aftershow: function(){} //Function for after opening timepicker
+    });
+
+         $.get( "api/pubsub", function( data ) {
+                if(data.sale){
+                        $("#pubsubTitle").append(" Sale!")
+                }
+                else{
+                        $("#pubsubTitle").append(" No Sale");
+                }
+                $("#pubsubData").html(data.string);
+          });
+
+
+         //thanks stackoverflow
+    String.prototype.capitalize = function() {
+    return this.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+    };
+         //get weather data
+         $.get( "api/weather", function( data ) {
+                blob = JSON.parse(data);
+                $("#weatherTitle").append(blob.weather[0].main);
+          var output = "";  
+          output += '<i style="font-size:8rem" class="wi wi-owm-'+blob.weather[0].id+'"><\/i><br>';
+          output += "<div style='display: flex; height: 4rem'><div style='flex: 1 1 auto; align-self: flex-end ;height:2rem; '>"+blob.main.temp+"&deg;F<\/div><div style='flex: 1 1 auto; align-self: flex-end; height:2rem; '>"+blob.weather[0].description.capitalize()+"<\/div><\/div>";
+         document.querySelector('#weatherData').innerHTML = (output);
+         
+        
+        });
+        $(".widget").hover(function(){
+                $( this ).css("transform", "translateY(0vh");
+                console.log(this);
+                                },
+                function(){
+                        $( this ).css("transform", "translateY(18vh");
+                        }
+        );
+        getTime();
+        setInterval(getTime, 1000);
+
+        //Meme Monday
+        //Tasty Tuesday
+        //Woah Dude Wednesday
+        //Thunderstorm Thursday
+        //Fancy Friday
+        //Caturday Saturday
+        //Sunshine Sunday
+
+        videos = {};
+        videos.memes= ['b8HO6hba9ZE','K5tVbVu9Mkg','gy1B3agGNxw','2gmQYBZPV7g','9AMYVgtmkoM','9AMYVgtmkoM','ZZ5LpwO-An4','vTIIMJ9tUc8'
+        ]
+        videos.coffee = ['HMnrl0tmd3k'];
+        
+        function triggerAlarm(){
+                $.get( "api/coffee");
+                $("#fadeFlash").fadeTo(2000, 1);        
+                setTimeout(function(){if(day === 1){
+                        $("body").css("background-image", "url(vaporwave.jpg)");
+                        $("#title").css("font-family", "impact");
+                        $("#title").css("font-weight", "bold");
+
+                        $("#title").text("MEME MONDAY!");
+                        var videoID = videos.memes[Math.floor(Math.random()*videos.memes.length)]
+                        $("#videoPlayer").html(`<iframe style="pointer-events: none" width="420" height="315" src="https://www.youtube.com/embed/${videoID}?controls=0&loop=1&autoplay=1"><\/iframe>`);
+                }
+                else{
+                        $("body").css("background-image", "url(coffee.jpg)");
+                        var videoID = videos.coffee[Math.floor(Math.random()*videos.coffee.length)]
+                        $("#videoPlayer").html(`<iframe style="pointer-events: none" width="420" height="315" src="https://www.youtube.com/embed/${videoID}?controls=0&loop=1&autoplay=1"><\/iframe>`);
+                }
+
+                $("#fadeFlash").fadeTo(2000, 0); },2000);
+                
+        }
+
+        var day = (new Date()).getDay();
+
+        function cancelAlarm(){
+                $("#fadeFlash").fadeTo(2000, 1);
+                setTimeout(function(){
+                        $("#videoPlayer").html("");
+                        $("body").css("background-image", "url(pattern.png)");
+                $("#fadeFlash").fadeTo(2000, 0);
+                 },2000);
+        
+                        
+                        
+        } 
+
+        function memeDemo(){
+                day = 1;
+                triggerAlarm();
+        }
+
+        function demo(){
+                triggerAlarm();
+        }
+    </script>
+  </div>
+</body>
+</html>

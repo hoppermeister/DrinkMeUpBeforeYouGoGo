@@ -1,0 +1,11 @@
+{
+  "name": "DrinkMeUpBeforeYouGoGo",
+  "version": "0.0.0",
+  "description": "Knight Hacks 2017 Project",
+  "main": "start.js",
+  "scripts": {
+    "test": "start.js"
+  },
+  "author": "Andrew Hopper",
+  "license": "BSD-2-Clause"
+}
